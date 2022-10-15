@@ -1,7 +1,9 @@
 package com.example.sockettest2.controller;
 
 import com.example.sockettest2.dto.Message;
+import com.example.sockettest2.dto.ResponseDto;
 import com.example.sockettest2.dto.Room;
+import com.example.sockettest2.dto.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.util.HtmlUtils;
 
 import javax.servlet.http.Cookie;
@@ -27,6 +30,8 @@ import java.util.*;
 public class TestController {
 
     private final SimpMessageSendingOperations messageSendingOperations;
+
+    List<String> userList = new ArrayList<>();
 
     // 메인화면
     @GetMapping("/test")
@@ -60,10 +65,28 @@ public class TestController {
 
 
     @MessageMapping("/alarmtest")
-    @SendTo("/sub/test")
-    public Message test2(Message message) throws Exception{
+    @SendTo("/sub/test/{companyId}")
+    public ResponseDto test2(@DestinationVariable String companyId, Message message, WebSocketSession session) throws Exception{
+        // https://velog.io/@mindfulness_22/websocket-userinfo
+
+        User userData = (User) session.getAttributes().get("keyValue");
+        userList.add(userData.getUserId());
+
+        Boolean checkId = findById(companyId);
+        if(checkId==false){
+            return null;
+        }
+
         System.out.println(message.getMessage());
-//        Thread.sleep(1000); 대기 슬립은 왜 주는 거임
-        return message;
+        return new ResponseDto(true, message);
+    }
+
+    public Boolean findById(String companyId){ // 나중에 스트링으로(uuid를 통해 세션 키값 변경하고 나면)
+        for(String user : userList){
+            if(companyId.equals(user)){
+                return true;
+            }
+        }
+        return false;
     }
 }

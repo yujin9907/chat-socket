@@ -8,6 +8,8 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <h1>이 글은 기업 companyId 2가 작성한 글임</h1>
+    <input id="companyId" type="hidden" value="2">
 
     <!-- sock js -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
@@ -28,9 +30,11 @@
 <div id = "testbox"></div>
 
 <script>
-        $("#connection").click(function () {connect(); });
-        $("#disconnection").click(function () {disconnect(); });
-        $("#send").click(function () {senddata(); });
+    let companyId = $("#companyId").val();
+
+    $("#connection").click(function () {connect(); });
+    $("#disconnection").click(function () {disconnect(); });
+    $("#send").click(function () {senddata(); });
 
     // 연결
     let stomp="";
@@ -41,11 +45,13 @@
 
         stomp.connect({}, function () {
             console.log('연결됨');
-            stomp.subscribe('/sub/test', function (result){
+            stomp.subscribe('/sub/test/'+companyId, function (result){
                 console.log('구독중');
                 let parsingRusult = JSON.parse(result.body);
-                console.log(parsingRusult.message);
-                viewMesaage(parsingRusult);
+                console.log(parsingRusult.checkResult);
+                if(parsingRusult.checkResult==true){
+                    viewMesaage(parsingRusult.data);
+                }
             });
         });
 
@@ -63,7 +69,7 @@
     });
     function senddata(){
         let data = {
-            'userId':1,
+            'companyId':companyId,
             'message':'어떤짓거리를했는가',
             'nickname':'음....',
         };
