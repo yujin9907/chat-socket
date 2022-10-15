@@ -10,13 +10,17 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    // 어떤 색기가 구독하는지 정함
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/websocket").withSockJS();
     }
 
+    // 어떤 색기한테 메시지를 반환할지
+    // 메시지메핑하는 색기들 프리픽스 설정할게
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
+        registry.enableSimpleBroker("/sub");
+        registry.setApplicationDestinationPrefixes("/pub");
     }
 }

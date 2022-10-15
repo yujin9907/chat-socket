@@ -2,66 +2,31 @@ package com.example.sockettest2.controller;
 
 import com.example.sockettest2.dto.Message;
 import com.example.sockettest2.dto.Room;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.HtmlUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
+@RequiredArgsConstructor
 @Controller
 public class TestController {
 
-    // 쿠키에서 방번호, 닉네임 찾기
-    public Map<String, String> testfindCookie() {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-        HttpServletRequest request = attr.getRequest();
-
-        Cookie[] cookies = request.getCookies();
-        String nickname= "";
-
-        if(cookies == null) {
-            return null;
-        }
-
-        if(cookies != null) {
-            for(int i=0;i<cookies.length;i++) {
-                if("nickname".equals(cookies[i].getName())) {
-                    nickname = cookies[i].getValue();
-                }
-            }
-            Map<String, String> map = new HashMap<>();
-            map.put("nickname", nickname);
-            return map;
-        }
-        return null;
-    }
-
-    // 쿠키에 추가
-    public void addCookie(String cookieName, String cookieValue) {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-        HttpServletResponse response = attr.getResponse();
-
-        Cookie cookie = new Cookie(cookieName, cookieValue);
-
-        int maxage = 60 * 60 * 24 * 7;
-        cookie.setMaxAge(maxage);
-        response.addCookie(cookie);
-    }
-    public void createNickname(String nickname) {
-        addCookie("nickname", nickname);
-    }
-
+    private final SimpMessageSendingOperations messageSendingOperations;
 
     // 메인화면
     @GetMapping("/test")
@@ -69,14 +34,36 @@ public class TestController {
         return "maintest";
     }
 
-    //	----------------------------------------------------
-    // 메세지 컨트롤러
 
-    // 채팅방에서 메세지 보내기
-    @MessageMapping("/socket/sendMessage/{roomNumber}")
-    @SendTo("/topic/message/{roomNumber}")
-    public Message sendMessage(@DestinationVariable String roomNumber, Message message) {
-        return message;
+    // 유저가 소켓에 연결 요청
+    // destinationvariable = pathvariable 이랑 비슷한 거
+    @MessageMapping("/{userId}")
+    public void testmessage(@DestinationVariable("userId") Integer userId, Message message){
+        // config에서 지정한 endpoint localhost:8080/websocket으로 연결하면
+        // 클라이언트에서 /sub/{userId}를 구독함
+        // /websocket으로 요청하면 소켓이 연결됨
+
+        messageSendingOperations.convertAndSend("/sub/"+userId,
+                "alarm socket connection complete");
     }
 
+//    // 이걸 실행시키면 '이벤트'가 일어났을 때 알람을 발송해줌
+//    public void alarmByMessage(Message message){
+//        messageSendingOperations.convertAndSend("/sub/"+message.getUserId(), message);
+//    }
+
+    // https://kukekyakya.tistory.com/12
+    // 이거 보고 뷰 이해하기
+    // 참고2 https://velog.io/@gywls1474/%ED%95%AD%ED%95%B499-Weekly-I-learned-%EC%8B%A4%EC%A0%84-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%ED%8E%B8-websocket-Stomp-%EC%8B%A4%EC%8B%9C%EA%B0%84-%EC%B4%88%EB%8C%80%EC%95%8C%EB%A6%BC-%EA%B5%AC%ED%98%84
+    // http 세션과 webSock 세션 연결 https://reinvestment.tistory.com/57
+    // 그 2번 교과서 같은 글 https://daddyprogrammer.org/post/4691/spring-websocket-chatting-server-stomp-server/
+
+
+    @MessageMapping("/alarmtest")
+    @SendTo("/sub/test")
+    public Message test2(Message message) throws Exception{
+        System.out.println(message.getMessage());
+//        Thread.sleep(1000); 대기 슬립은 왜 주는 거임
+        return message;
+    }
 }
