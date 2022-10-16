@@ -13,7 +13,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Data
 public class Message {
-    private Integer userId; // 메시지를 받을 유저
+    private Integer subscriber; // 메시지를 받을 유저
     private String message;
     private String nickname;
     //private Date date;

@@ -59,11 +59,10 @@ public class TestController {
     // 그 2번 교과서 같은 글 https://daddyprogrammer.org/post/4691/spring-websocket-chatting-server-stomp-server/
 
 
-    @MessageMapping("/alarmtest")
-    @SendTo("/sub/test")
-    public Message test2(Message message) throws Exception{
+    @MessageMapping("/alarmtest/{subscriber}") // 글쓴새끼 정보
+    public void test2(Message message) throws Exception{
         System.out.println(message.getMessage());
-//        Thread.sleep(1000); 대기 슬립은 왜 주는 거임
-        return message;
+        // convertandsend 함수로 보내면, message(메시지 전송 데이터)에 알림을 받을 대상(글쓴새끼) 있어야됨
+        messageSendingOperations.convertAndSend("/sub/test/"+message.getSubscriber(), message);
     }
 }

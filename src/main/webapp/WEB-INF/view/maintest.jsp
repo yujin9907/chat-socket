@@ -22,18 +22,38 @@
 테스트 페이지 입니다
 
 <button id="connection" type="button">연결하기</button>
+<button id="connection2" type="button">연결하기2</button>
 <button id="disconnection" type="button">해제하기</button>
 <input id="testmessage" type="text"><button id="btnsend" type="button">전송</button>
 
 <div id = "testbox"></div>
 
 <script>
-        $("#connection").click(function () {connect(); });
-        $("#disconnection").click(function () {disconnect(); });
-        $("#send").click(function () {senddata(); });
+    let sample = 1;
+
+    $("#connection2").click(function () {connect2(); });
+    $("#connection").click(function () {connect(); });
+    $("#disconnection").click(function () {disconnect(); });
+    $("#send").click(function () {senddata(); });
 
     // 연결
     let stomp="";
+
+    function connect2(){
+        let socket = new SockJS('/websocket');
+        stomp = Stomp.over(socket);
+
+        stomp.connect({}, function () {
+            console.log('2 연결됨');
+            stomp.subscribe('/sub/test/'+2, function (result){
+                console.log('구독중2');
+                let parsingRusult = JSON.parse(result.body);
+                console.log(parsingRusult)
+                viewMesaage(parsingRusult);
+            });
+        });
+
+    }
 
     function connect(){
         let socket = new SockJS('/websocket');
@@ -41,10 +61,10 @@
 
         stomp.connect({}, function () {
             console.log('연결됨');
-            stomp.subscribe('/sub/test', function (result){
+            stomp.subscribe('/sub/test/'+sample, function (result){
                 console.log('구독중');
                 let parsingRusult = JSON.parse(result.body);
-                console.log(parsingRusult.message);
+                console.log(parsingRusult)
                 viewMesaage(parsingRusult);
             });
         });
@@ -63,19 +83,18 @@
     });
     function senddata(){
         let data = {
-            'userId':1,
+            'subscriber':1,
             'message':'어떤짓거리를했는가',
             'nickname':'음....',
         };
 
-        stomp.send("/pub/alarmtest", {}, JSON.stringify(data));
+        stomp.send("/pub/alarmtest/1", {}, JSON.stringify(data));
         // 여기 주소는 뭔데 그냥 좆으로 보내나?
         // ㄴㄴ 매핑한 주소로 보내기(프리픽스 노포함)
     }
 
     // 메시지 그리기
     function viewMesaage(message){
-        console.log(message.nickname);
         let username = message.nickname;
         let messagedata = message.message;
 
