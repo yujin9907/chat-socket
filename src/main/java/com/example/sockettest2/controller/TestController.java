@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
@@ -31,7 +32,7 @@ public class TestController {
 
     private final SimpMessageSendingOperations messageSendingOperations;
 
-    List<String> userList = new ArrayList<>();
+    List<Integer> userList = new ArrayList<>();
 
     // 메인화면
     @GetMapping("/test")
@@ -63,27 +64,32 @@ public class TestController {
     // http 세션과 webSock 세션 연결 https://reinvestment.tistory.com/57
     // 그 2번 교과서 같은 글 https://daddyprogrammer.org/post/4691/spring-websocket-chatting-server-stomp-server/
 
+    @MessageMapping("/alarmtest/{nowUser}")
+    @SendTo("sub/test/{subscriber}")
+    public ResponseDto test2(@DestinationVariable("subscriber") Integer subscriber, @DestinationVariable("nowUser") Integer nowUser, Message message, WebSocketSession session) throws Exception{
 
-    @MessageMapping("/alarmtest")
-    @SendTo("/sub/test/{companyId}")
-    public ResponseDto test2(@DestinationVariable String companyId, Message message, WebSocketSession session) throws Exception{
         // https://velog.io/@mindfulness_22/websocket-userinfo
 
-        User userData = (User) session.getAttributes().get("keyValue");
-        userList.add(userData.getUserId());
+//        User userData = (User) session.getAttributes().get("keyValue");
+//        userList.add(userData.getUserId());
+//
+//        Boolean checkId = findById(companyId);
+//        if(checkId==false){
+//            return null;
+//        }
 
-        Boolean checkId = findById(companyId);
-        if(checkId==false){
-            return null;
+        userList.add(subscriber);
+        Boolean checkUser = findById(message.getCompanyId());
+        if(checkUser==true){
+            return new ResponseDto(true, message);
         }
+        return null;
 
-        System.out.println(message.getMessage());
-        return new ResponseDto(true, message);
     }
 
-    public Boolean findById(String companyId){ // 나중에 스트링으로(uuid를 통해 세션 키값 변경하고 나면)
-        for(String user : userList){
-            if(companyId.equals(user)){
+    public Boolean findById(Integer subscriber){ // 나중에 스트링으로(uuid를 통해 세션 키값 변경하고 나면)
+        for(Integer user : userList){
+            if(subscriber==user){
                 return true;
             }
         }
