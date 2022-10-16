@@ -89,8 +89,6 @@
         };
 
         stomp.send("/pub/alarmtest/1", {}, JSON.stringify(data));
-        // 여기 주소는 뭔데 그냥 좆으로 보내나?
-        // ㄴㄴ 매핑한 주소로 보내기(프리픽스 노포함)
     }
 
     // 메시지 그리기
@@ -98,7 +96,6 @@
         let username = message.nickname;
         let messagedata = message.message;
 
-        // 아작스가 읽을 수 있도록 파싱
         // message = message.replaceAll("\n", "<br>").replaceAll(" ", "&nbsp");
 
         let messageDraw =`<p>`+username+`이 보낸 메시지 :`+messagedata+`</p>`;

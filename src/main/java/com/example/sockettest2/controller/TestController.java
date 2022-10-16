@@ -59,10 +59,21 @@ public class TestController {
     // 그 2번 교과서 같은 글 https://daddyprogrammer.org/post/4691/spring-websocket-chatting-server-stomp-server/
 
 
-    @MessageMapping("/alarmtest/{subscriber}") // 글쓴새끼 정보
-    public void test2(Message message) throws Exception{
-        System.out.println(message.getMessage());
+    @MessageMapping("/alarmtest/{loginUser}") // 글쓴새끼 정보
+    public void test2(@DestinationVariable Integer loginUser, Message message) throws Exception{
         // convertandsend 함수로 보내면, message(메시지 전송 데이터)에 알림을 받을 대상(글쓴새끼) 있어야됨
-        messageSendingOperations.convertAndSend("/sub/test/"+message.getSubscriber(), message);
+        boolean checkUser = findByLoginUser(message.getSubscriber(), loginUser); // subscriber(이름 수정해야됨)는 글을 쓴 놈, loginuser는 지금 구독중인유저
+        if(checkUser==true){
+            messageSendingOperations.convertAndSend("/sub/test/"+message.getSubscriber(), message);
+        } else {
+            // db에 저장
+        }
+    }
+
+    public boolean findByLoginUser(Integer subscriber, Integer loginUser){
+        if(subscriber==loginUser){
+            return true;
+        }
+        return false;
     }
 }
